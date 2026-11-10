@@ -1,0 +1,124 @@
+{
+  "model": "reference",
+  "provider_model": "scripted (no model)",
+  "prompt": "In data/shop.db, the orders table holds every order and the customers table holds each customer's country. Build a Hydra ETL job in jobs/revenue_by_country that reports, for each country, the number of paid orders and their total amount: only orders with status 'paid', total rounded to 2 decimals, sorted from the highest revenue to the lowest. Write the result to outputs/revenue_by_country.csv with exactly the columns country, orders, revenue. Then run the job and check the result.",
+  "started": "2026-11-10T09:53:46+00:00",
+  "events": [
+    {
+      "t": 3.6,
+      "kind": "assistant",
+      "text": "(scripted reference run: no model, the expected tool calls)"
+    },
+    {
+      "t": 3.6,
+      "kind": "tool_call",
+      "name": "hydra_preview_data",
+      "args": {
+        "file_path": "data/shop.db"
+      }
+    },
+    {
+      "t": 3.6,
+      "kind": "tool_result",
+      "name": "hydra_preview_data",
+      "text": "Database: data/shop.db\nTables:\n- customers (300 rows): customer_id INTEGER, name TEXT, country TEXT\n- orders (2000 rows): order_id INTEGER, customer_id INTEGER, ordered_at TEXT, amount TEXT, status TEXT\n\nGive `table` to see the first rows of a table.\n\nIn a job: type: sqlite, connection.path relative to the job folder."
+    },
+    {
+      "t": 3.6,
+      "kind": "tool_call",
+      "name": "hydra_list_operations",
+      "args": {}
+    },
+    {
+      "t": 4.0,
+      "kind": "tool_result",
+      "name": "hydra_list_operations",
+      "text": "aggregate      required: by, agg\ncalculate      required: column, expr\ncast           required: mapping\nclean          required: —\ndeduplicate    required: —\nfill_null      required: —\nfilter         required: expr\njoin           required: right\nmerge          required: right, key\npivot          required: index, column, values\nrename         required: mapping\nscript         required: outputs, code\nselect         required: columns\nsort           required: by\ntext_to_rows   required: column\ntranspose      required: —\ntrim           required: —\nunion          required: right\nunpivot        required: id_vars\nwindow         required: columns"
+    },
+    {
+      "t": 4.0,
+      "kind": "tool_call",
+      "name": "hydra_write_job",
+      "args": {
+        "job_path": "jobs/revenue_by_country",
+        "sources_yaml": "version: \"1.0\"\nsources:\n  orders:\n    type: sqlite\n    connection:\n      path: ../../data/shop.db\n    extract:\n      table: orders\n  customers:\n    type: sqlite\n    connection:\n      path: ../../data/shop.db\n    extract:\n      table: customers\n",
+        "transformations_yaml": "version: \"1.0\"\nsteps:\n  - filter:\n      expr: \"status == 'paid'\"\n  - cast:\n      mapping:\n        amount: float\n  - join:\n      right: customers\n      key: customer_id\n      how: inner\n  - aggregate:\n      by: [country]\n      agg:\n        orders: {func: count, col: order_id}\n        revenue: {func: sum, col: amount}\n  - calculate:\n      column: revenue\n      expr: \"round(revenue, 2)\"\n  - sort:\n      by: [revenue]\n      ascending: false\n  - select:\n      columns: [country, orders, revenue]\n",
+        "destinations_yaml": "version: \"1.0\"\ndestinations:\n  report:\n    type: csv\n    load:\n      table: ../../outputs/revenue_by_country.csv\n      mode: replace\n",
+        "pipeline_yaml": "version: \"1.0\"\npipeline:\n  from: orders\n  to: report\n"
+      }
+    },
+    {
+      "t": 5.0,
+      "kind": "tool_result",
+      "name": "hydra_write_job",
+      "text": "WRITTEN to jobs/revenue_by_country: destinations.yaml, pipeline.yaml, sources.yaml, transformations.yaml.\nThe job is valid. It was not run — use hydra_run_job if the user asks for it."
+    },
+    {
+      "t": 5.0,
+      "kind": "tool_call",
+      "name": "hydra_check_job",
+      "args": {
+        "user_request": "In data/shop.db, the orders table holds every order and the customers table holds each customer's country. Build a Hydra ETL job in jobs/revenue_by_country that reports, for each country, the number of paid orders and their total amount: only orders with status 'paid', total rounded to 2 decimals, sorted from the highest revenue to the lowest. Write the result to outputs/revenue_by_country.csv with exactly the columns country, orders, revenue. Then run the job and check the result.",
+        "job_path": "jobs/revenue_by_country"
+      }
+    },
+    {
+      "t": 5.1,
+      "kind": "tool_result",
+      "name": "hydra_check_job",
+      "text": "NO ALERT — the job looks consistent with the request. Present it to the user."
+    },
+    {
+      "t": 5.1,
+      "kind": "tool_call",
+      "name": "hydra_run_job",
+      "args": {
+        "job_path": "jobs/revenue_by_country"
+      }
+    },
+    {
+      "t": 9.9,
+      "kind": "tool_result",
+      "name": "hydra_run_job",
+      "text": "RUN SUCCEEDED\nDevOps Edition  v0.20.0  ────────────────────────────\n  ▶  Pipeline  revenue_by_country  — jobs/revenue_by_country\n  ✅ Pipeline completed successfully in 3.0s\n  Rows read   : 2,000\n  Rows written: 8\n\nOutput produced:\n- report: ../../outputs/revenue_by_country.csv — 8 rows, 3 columns (country, orders, revenue)"
+    },
+    {
+      "t": 9.9,
+      "kind": "tool_call",
+      "name": "hydra_preview_data",
+      "args": {
+        "file_path": "outputs/revenue_by_country.csv",
+        "rows": 10
+      }
+    },
+    {
+      "t": 9.9,
+      "kind": "tool_result",
+      "name": "hydra_preview_data",
+      "text": "File: outputs/revenue_by_country.csv\nColumns: country (object), orders (int64), revenue (float64)\nTotal rows: 8\n\nFirst 10 rows:\ncountry  orders   revenue\n  Italy     258 121151.67\nBelgium     238 110779.97\n Canada     241 110332.47\nMorocco     219  99527.67\n France     180  85075.75\n  Spain     184  84303.74\nGermany     176  77537.33\nTunisia     134  59638.26\n\nReminder: a CSV file carries no types. The types above are guessed by the reader, not guaranteed — put a `cast` before any numeric comparison."
+    },
+    {
+      "t": 9.9,
+      "kind": "assistant",
+      "text": "Job written, checked and run."
+    }
+  ],
+  "tokens": {
+    "input": 0,
+    "output": 0
+  },
+  "turns": 0,
+  "duration_s": 10.2,
+  "stopped": "script finished",
+  "stats": {
+    "tool_calls": 6,
+    "writes_refused": 0,
+    "runs_failed": 0,
+    "runs_succeeded": 1,
+    "alerts": 0
+  },
+  "check": {
+    "ok": true,
+    "problems": []
+  }
+}

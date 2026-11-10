@@ -1,0 +1,14 @@
+version: "1.0"
+sources:
+  orders:
+    type: sqlite
+    connection:
+      path: ../../data/shop.db
+    extract:
+      table: orders
+  customers:
+    type: sqlite
+    connection:
+      path: ../../data/shop.db
+    extract:
+      table: customers

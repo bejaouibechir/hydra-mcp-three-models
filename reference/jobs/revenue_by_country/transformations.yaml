@@ -1,0 +1,24 @@
+version: "1.0"
+steps:
+  - filter:
+      expr: "status == 'paid'"
+  - cast:
+      mapping:
+        amount: float
+  - join:
+      right: customers
+      key: customer_id
+      how: inner
+  - aggregate:
+      by: [country]
+      agg:
+        orders: {func: count, col: order_id}
+        revenue: {func: sum, col: amount}
+  - calculate:
+      column: revenue
+      expr: "round(revenue, 2)"
+  - sort:
+      by: [revenue]
+      ascending: false
+  - select:
+      columns: [country, orders, revenue]

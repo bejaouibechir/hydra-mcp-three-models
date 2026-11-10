@@ -1,0 +1,11 @@
+{
+  "name": "hydra-mcp-three-models",
+  "image": "mcr.microsoft.com/devcontainers/python:3.12",
+  "postCreateCommand": "pip install -r requirements.txt && cp -n .env.example .env",
+  "secrets": {
+    "ANTHROPIC_API_KEY": {"description": "Optional: to run Claude live"},
+    "DEEPSEEK_API_KEY": {"description": "Optional: to run DeepSeek live"},
+    "ZAI_API_KEY": {"description": "Optional: to run GLM live"}
+  },
+  "customizations": {"vscode": {"extensions": ["ms-python.python"]}}
+}

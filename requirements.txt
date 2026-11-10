@@ -1,0 +1,3 @@
+hydra-etl[mcp]>=0.20.1
+anthropic>=0.40
+openai>=1.40
